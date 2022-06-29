@@ -59,7 +59,7 @@ class TS_euler:
 
         return np.array([C_RHS,P_RHS,S_RHS])
 
-    def RHS_exp_bw(self,AdjSol,CE,dt,force,Sol):
+     def RHS_exp_bw(self,AdjSol,CE,dt,force,Sol):
 
         """
         Input:
@@ -81,9 +81,9 @@ class TS_euler:
 
         P      = Sol
 
-        dFP    =  ((np.exp(-(P-CE.nu1)**2) - np.exp(-(P-CE.nu2)**2)) 
-        - P*((P-CE.nu1)*np.exp(-(P-CE.nu1)**2) 
-            - (P-CE.nu2)*np.exp(-(P-CE.nu2)**2)))
+        dFP    =  (np.exp(-(P-CE.nu1)**2) - np.exp(-(P-CE.nu2)**2)) 
+                    - P*((P-CE.nu1)*np.exp(-(P-CE.nu1)**2) 
+                        - (P-CE.nu2)*np.exp(-(P-CE.nu2)**2))
 
         C_RHS  =   + CE.a*C_adj  - CE.b1*P_adj - CE.c1*S_adj
         P_RHS  =   - CE.c2*S_adj*dFP + CE.b2*P_adj
@@ -629,7 +629,7 @@ def PreSortData(RealDat,Flag):
 
 
 
-def DrugExpt(DirName,BaseDir,Type='beta'):
+def DrugExpt(DirName,Type='beta'):
 
     """ Function to evaluate drug expt"""
 
@@ -637,18 +637,17 @@ def DrugExpt(DirName,BaseDir,Type='beta'):
     for N in ['1','7']:
         Name = N+'_'+DirName
         global SeedFile
-        if(N=='1'):
-            SeedFile = BaseDir+'CA1_1Spine/CamKIIb/1_CamKII_alt_nu.json'
-        else:
-            SeedFile = BaseDir+'CA1_7Spine/CamKIIb/7_CamKII_nu.json'
+        try:
+            if(N=='1'):
+                SeedFile = '1Spine/AIP/1_CamKII_alt_nu.json'
+            else:
+                SeedFile = '7Spine/AIP/7_CamKII_nu.json'
             
-        Dir = BaseDir+'CA1_'+N+'Spine/'+DirName+'/'
-        A,D = ReadFiles(Dir)
-        RealDat = A[D==0]
-        InitMethod = 'File'
-        if('CHX' in Name or 'Aniso' in Name):
-            optchoice = np.array([0,1,1,1,1,0,0,0,0]).astype(bool)
-        else:
+            Dir = N+'Spine/'+DirName+'/'
+            A,D = ReadFiles(Dir)
+            RealDat = A[D==0]
+            InitMethod = 'File'
+    
             if(Type=='nu'):
                 optchoice = np.array([0,1,0,0,0,0,0,1,1]).astype(bool)
             elif(Type=='beta'):
@@ -659,14 +658,14 @@ def DrugExpt(DirName,BaseDir,Type='beta'):
                 optchoice = np.array([0,0,0,0,0,0,0,1,1]).astype(bool)
             else:
                 optchoice = np.array([0,1,0,0,0,0,0,0,0]).astype(bool)
-    
-        DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
+        
+            DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
 
-        with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
-        os.remove(Dir+'Best_System.json')
-        with open(Dir+Name+'_'+Type+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
+            with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
+            os.remove(Dir+'Best_System.json')
+            with open(Dir+Name+'_'+Type+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
 
-def ClustExpt(BaseDir):
+def ClustExpt():
 
     """ Function to evaluate cluster expt"""
 
@@ -675,29 +674,28 @@ def ClustExpt(BaseDir):
         print(N)
         print('---------------------------')
         global SeedFile
-        SeedFile = BaseDir+'CA1_'+N+'Spine/Control/'+N+'_pot.json'
-        Name = N+'_clust'
-        Dir = BaseDir+'CA1_'+N+'Spine/Control/'
-        A,D = ReadFiles(Dir)
-        RealDat = A[D<0]
-        times = [2,10,20,30,40]
+        try:
+            SeedFile = N+'Spine/Control/'+N+'_pot.json'
+            Name = N+'_clust'
+            Dir = N+'Spine/Control/'
+            A,D = ReadFiles(Dir)
+            RealDat = A[D<0]
+            times = [2,10,20,30,40]
 
 
-        InitMethod = 'File'
+            InitMethod = 'File'
 
-        optchoice = np.array([1,1,0,0,0,0,0,0,0]).astype(bool)
- 
-        DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
+            optchoice = np.array([1,1,0,0,0,0,0,0,0]).astype(bool)
+     
+            DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
 
-        with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
-        os.remove(Dir+'Best_System.json')
-        with open(Dir+Name+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
+            with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
+            os.remove(Dir+'Best_System.json')
+            with open(Dir+Name+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
+        except:
+            print('No seed file!')
 
-    print('---------------------------')
-    print('Drug cluster')
-    print('---------------------------')
-
-def DrugExptClust(DirName,BaseDir,Type='beta'):
+def DrugExptClust(DirName,Type='beta'):
 
     """ Function to evaluate drug cluster expt"""
 
@@ -705,21 +703,24 @@ def DrugExptClust(DirName,BaseDir,Type='beta'):
     for N in ['7']:
         Name = N+'_'+DirName
         global SeedFile
-        Dir = BaseDir+'CA1_7Spine/CamKIIb/'
-        SeedFile = BaseDir+'CA1_7Spine/CamKIIb/7_CamKII_nu.json'
-        A,D = ReadFiles(Dir)
-        RealDat = A[D<0]
-        InitMethod = 'File'
-        optchoice = np.array([1,1,0,0,0,0,0,0,0]).astype(bool)
-    
-        DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
+        Dir = '7Spine/AIP/'
+        try:
+            SeedFile = '7Spine/AIP/7_CamKII_nu.json'
+            A,D = ReadFiles(Dir)
+            RealDat = A[D<0]
+            InitMethod = 'File'
+            optchoice = np.array([1,1,0,0,0,0,0,0,0]).astype(bool)
+        
+            DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
 
-        with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
-        os.remove(Dir+'Best_System.json')
-        with open(Dir+Name+'_'+Type+'_clust.json', 'w') as fp: json.dump(temp,fp,indent=4)
+            with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
+            os.remove(Dir+'Best_System.json')
+            with open(Dir+Name+'_'+Type+'_clust.json', 'w') as fp: json.dump(temp,fp,indent=4)
+        except:
+            print('No seed file!')
 
         
-def ControlExpt(BaseDir):
+def ControlExpt():
 
 
     """ Function to evaluate stimulated spines expt"""
@@ -733,56 +734,56 @@ def ControlExpt(BaseDir):
         print(N)
         print('---------------------------')
         global Name
-        SeedFile = BaseDir + 'CA1_'+N+'spine/Control/'+N+'_pot.json'
-        
-        Name = N+'_pot'
-        Dir = BaseDir +'CA1_'+N+'spine/Control/'
-        A,D = ReadFiles(Dir)
-        RealDat = A[D==0]
-        Flag = False
-        RealDat = PreSortData(RealDat,Flag)
-        InitMethod = 'File'
+        try:
+            SeedFile = N+'spine/Control/'+N+'_pot.json'
+            
+            Name = N+'_pot'
+            Dir = N+'spine/Control/'
+            A,D = ReadFiles(Dir)
+            RealDat = A[D==0]
+            Flag = False
+            RealDat = PreSortData(RealDat,Flag)
+            InitMethod = 'File'
 
 
-        DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
+            DatRun(RealDat.T[3:,:],times,Dir,InitMethod,optchoice)    
 
-        with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
-        os.remove(Dir+'Best_System.json')
-        with open(Dir+Name+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
-
-        optchoice =  np.array([1,1,0,0,0,0,0,1,1]).astype(bool)
+            with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
+            os.remove(Dir+'Best_System.json')
+            with open(Dir+Name+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
+        except:
+            print('No seed file!')
 
     
 
 if __name__ == '__main__':
 
     Mode = 0 #1,2,3
-    BaseDir = 'Path/to/Data/'
     if Mode==0:
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Control')
-        ControlExpt(BaseDir)
+        ControlExpt()
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     elif Mode==1:
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Drugs')
         print('---------------------------')
-        print('CamKII')
+        print('AIP')
         print('---------------------------')
-        DrugExpt('CamKIIb',BaseDir,Type='nu',)
+        DrugExpt('AIP',Type='nu')
         print('---------------------------')
-        print('Calcineurin')
+        print('FK506')
         print('---------------------------')
-        DrugExpt('Calcineurin',BaseDir,Type='nu')
+        DrugExpt('FK506',Type='nu')
     elif Mode==2:
         print('Cluster')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        ClustExpt(BaseDir)
+        ClustExpt()
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     elif Mode==3:
         print('Drug Clusters')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        DrugExptClust('CamKIIb',BaseDir,Type='nus')
-        DrugExptClust('Calcineurin',BaseDir,Type='nus')
+        DrugExptClust('AIP',Type='nus')
+        DrugExptClust('FK506',Type='nus')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         
