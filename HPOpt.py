@@ -59,7 +59,7 @@ class TS_euler:
 
         return np.array([C_RHS,P_RHS,S_RHS])
 
-     def RHS_exp_bw(self,AdjSol,CE,dt,force,Sol):
+    def RHS_exp_bw(self,AdjSol,CE,dt,force,Sol):
 
         """
         Input:
@@ -81,9 +81,9 @@ class TS_euler:
 
         P      = Sol
 
-        dFP    =  (np.exp(-(P-CE.nu1)**2) - np.exp(-(P-CE.nu2)**2)) 
+        dFP    =  ((np.exp(-(P-CE.nu1)**2) - np.exp(-(P-CE.nu2)**2)) 
                     - P*((P-CE.nu1)*np.exp(-(P-CE.nu1)**2) 
-                        - (P-CE.nu2)*np.exp(-(P-CE.nu2)**2))
+                    - (P-CE.nu2)*np.exp(-(P-CE.nu2)**2)))
 
         C_RHS  =   + CE.a*C_adj  - CE.b1*P_adj - CE.c1*S_adj
         P_RHS  =   - CE.c2*S_adj*dFP + CE.b2*P_adj
@@ -664,6 +664,8 @@ def DrugExpt(DirName,Type='beta'):
             with open(Dir+'Best_System.json', 'r') as fp: temp = json.load(fp)
             os.remove(Dir+'Best_System.json')
             with open(Dir+Name+'_'+Type+'.json', 'w') as fp: json.dump(temp,fp,indent=4)
+        except:
+            pass
 
 def ClustExpt():
 
